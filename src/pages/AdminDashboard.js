@@ -1,4 +1,4 @@
-import {useState} from "react";
+import { useState } from "react";
 import { Container, Row, Col, Button, Tab, Tabs, Form } from "react-bootstrap";
 import FarmersCard from "../components/FarmersCard";
 import CustomersCard from "../components/CustomersCard";
@@ -13,30 +13,29 @@ import AddFarmerForm from "../components/AddFarmerForm";
 import UsersTable from "../components/UsersTable";
 import LendingCenter from "../components/LendingCenter";
 import { useNavigate } from "react-router-dom";
-import { signOut } from "firebase/auth";
-import { auth } from "../Firebase";
 
 export default function AdminDashboard() {
-
   const [addUserShow, setAddUserShow] = useState(false);
   const history = useNavigate();
 
   const logout = () => {
-    signOut(auth).then(() => {
-        // Sign-out successful.
-        history('/')
-    }).catch((error) => {
-    // An error happened.
-        console.log("Sign out unsuccessful.")
-    });
-  }
+    let text = "Do you want to logout?";
+    // eslint-disable-next-line no-restricted-globals
+    if (confirm(text) === true) {
+      // Redirecting to other page.
+      history("/");
+    }
+  };
 
   return (
     <>
       <LoginHeader />
       <Container style={{ textAlign: "left" }}>
-        <div style={{ textAlign: 'right'}}>
-          <Button onClick={() => logout(auth)} variant="warning">Logout</Button>
+        <div style={{ textAlign: "right" }}>
+          {/* <Button onClick={() => logout(auth)} variant="warning">Logout</Button> */}
+          <Button onClick={logout} variant="warning">
+            Logout
+          </Button>
         </div>
         <Tabs
           id="controlled-tab-example"
@@ -50,21 +49,30 @@ export default function AdminDashboard() {
             <Row>
               <Col>
                 <Form.Control
-                    type="text"
-                    placeholder="Search user"
-                    style={{
-                      borderColor: "#365900",
-                      borderRadius: "8px",
-                      boxShadow: "0 0 0 0.1rem #365900",
-                    }}
-                  />
+                  type="text"
+                  placeholder="Search user"
+                  style={{
+                    borderColor: "#365900",
+                    borderRadius: "8px",
+                    boxShadow: "0 0 0 0.1rem #365900",
+                  }}
+                />
               </Col>
               <Col>
-                <Button style={{ backgroundColor: '#FFC727', color: '#365900', borderColor:'#FFC727'}}>Search</Button>
+                <Button
+                  style={{
+                    backgroundColor: "#FFC727",
+                    color: "#365900",
+                    borderColor: "#FFC727",
+                  }}
+                >
+                  Search
+                </Button>
               </Col>
               <Col>{/* Do not add something here */}</Col>
-              <Col>{/* Do not add something here */}
-              <Button
+              <Col>
+                {/* Do not add something here */}
+                <Button
                   style={{
                     backgroundColor: "#365900",
                     color: "#FFC727",
@@ -78,7 +86,7 @@ export default function AdminDashboard() {
                   onClick={() => setAddUserShow(true)}
                 >
                   + add a user
-              </Button>
+                </Button>
                 <AddFarmerForm
                   show={addUserShow}
                   onHide={() => setAddUserShow(false)}
@@ -89,11 +97,10 @@ export default function AdminDashboard() {
             <br />
             {/* <h4 className="mb-3" style={{ fontWeight: '600'}}>View users</h4> */}
             <Row>
-                <Col>
-                  <UsersTable />
-                </Col>
+              <Col>
+                <UsersTable />
+              </Col>
             </Row>
-            
           </Tab>
           <Tab eventKey="usersAndDonations" title="Users and Donations">
             <br />
@@ -144,7 +151,7 @@ export default function AdminDashboard() {
             </Row>
           </Tab>
           <Tab eventKey="lendingCenter" title="Lending Center">
-            <LendingCenter/>
+            <LendingCenter />
           </Tab>
         </Tabs>
       </Container>
