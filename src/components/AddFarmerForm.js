@@ -1,6 +1,7 @@
-import React from "react";
+import { auth } from "../Firebase";
+import React, { useEffect, useState } from "react";
 import { Container, Modal, Button, Row, Col, Form } from "react-bootstrap";
-
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 export default function AddFarmerForm(props) {
   const data = {
     agribizUsers: [
@@ -1470,251 +1471,323 @@ export default function AddFarmerForm(props) {
     ],
   };
 
-  const [selectUserType, setSelectUserType] = React.useState();
-  const [selectedMunicipality, setSelectedMunicipality] = React.useState();
-  const [selectedBaranagay, setSelectedBarangay] = React.useState();
+  const [selectUserType, setSelectUserType] = useState();
+  const [userName, setUserName] = useState();
+  const [userFirstName, setUserFirstName] = useState();
+  const [userLastName, setUserLastName] = useState();
+  const [userEmail, setUserEmail] = useState();
+  const [userPhoneNumber, setUserPhoneNumber] = useState();
+  const [userPassword, setUserPassword] = useState();
+  const [userShopName, setUserShopName] = useState();
+  const [selectedMunicipality, setSelectedMunicipality] = useState();
+  const [selectedBaranagay, setSelectedBarangay] = useState();
+  const [userZIPCode, setUserZIPCode] = useState();
+  const [userSpecificAdd, setUserSpecificAdd] = useState();
+  const [userFileAttach, setUserFileAttch] = useState();
 
-  // Display all barangays based on the selected municipality
-  const availableBarangay = data.municipality.find(
-    (c) => c.name === selectedMunicipality
-  );
+  const addUser = () => {
+    console.log(selectUserType);
+    console.log(userName);
+    console.log(userFirstName);
+    console.log(userLastName);
+    console.log(userEmail);
+    console.log(userPhoneNumber);
+    console.log(userPassword);
+    console.log(userShopName);
+    console.log(selectedMunicipality);
+    console.log(selectedBaranagay);
+    console.log(userZIPCode);
+    console.log(userSpecificAdd);
+    console.log(userFileAttach);
+    let type = ""
+    if (selectUserType === "Farmer")
+       type = userShopName + "-f"
+    else
+       type = userShopName + "-a"
+  createUserWithEmailAndPassword(auth, userEmail, userPassword)
+    .then((userCredential) => {
 
-  return (
-    <>
-      <Modal
-        {...props}
-        size="lg"
-        dialogClassName="modal-90w"
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
-      >
-        <Modal.Body style={{ borderRadius: "400px" }}>
-          <Container>
-            <br />
-            <h4 className="mb-4" style={{ color: "#5E3819" }}>
-              Add a User
-            </h4>
-            <Row>
-              <Col md={4}>
-                <Form>
-                  <Form.Group>
-                    <Form.Select
-                      id="selectedUserType"
-                      value={selectUserType}
-                      onChange={(e) => setSelectUserType(e.target.value)}
-                      style={{
-                        borderColor: "#365900",
-                        borderRadius: "8px",
-                        boxShadow: "0 0 0 0.1rem #365900",
-                      }}
-                    >
-                      <option>--Select User Type--</option>
-                      <option value="Farmer">Farmer</option>
-                      <option value="Agrovet">Agrovet</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Form>
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form.Control
-                  id="fUsername"
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Username"
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="First Name"
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Last Name"
-                />
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="email"
-                  className="custom-form-control"
-                  placeholder="Email Address"
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="number"
-                  className="custom-form-control"
-                  placeholder="Phone Number"
-                  onInput={(e) => {
-                    e.target.value = Math.max(0, parseInt(e.target.value))
-                      .toString()
-                      .slice(0, 11);
-                  }}
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="password"
-                  className="custom-form-control"
-                  placeholder="Password"
-                />
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Shop Name"
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Region"
-                  value="Central Visayas (Region VII)"
-                  disabled
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Province"
-                  value="Cebu"
-                  disabled
-                />
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form>
-                  <Form.Group>
-                    <Form.Select
-                      id="selectedMunicipalityOption"
-                      value={selectedMunicipality}
-                      onChange={(e) => setSelectedMunicipality(e.target.value)}
-                      style={{
-                        borderColor: "#365900",
-                        borderRadius: "8px",
-                        boxShadow: "0 0 0 0.1rem #365900",
-                      }}
-                    >
-                      <option>--Choose Municipality--</option>
-                      {data.municipality.map((value, key) => {
-                        return (
-                          <option value={value.name} key={key}>
-                            {value.name}
-                          </option>
-                        );
-                      })}
-                    </Form.Select>
-                  </Form.Group>
-                </Form>
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form>
-                  <Form.Group>
-                    <Form.Select
-                      id="selectedBarangayOption"
-                      value={selectedBaranagay}
-                      onChange={(e) => setSelectedBarangay(e.target.value)}
-                      style={{
-                        borderColor: "#365900",
-                        borderRadius: "8px",
-                        boxShadow: "0 0 0 0.1rem #365900",
-                      }}
-                    >
-                      <option>--Choose Barangay--</option>
-                      {availableBarangay?.barangay.map((e, key) => {
-                        return (
-                          <option value={e.name} key={key}>
-                            {e}
-                          </option>
-                        );
-                      })}
-                    </Form.Select>
-                  </Form.Group>
-                </Form>
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="number"
-                  className="custom-form-control"
-                  placeholder="ZIP Code"
-                  onInput={(e) => {
-                    e.target.value = Math.max(0, parseInt(e.target.value))
-                      .toString()
-                      .slice(0, 4);
-                  }}
-                />
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Street name, bldg., etc."
-                />
-              </Col>
-              <Col>
-                <Form.Group controlId="formFile" className="mb-3">
-                  <Form.Control type="file" />
+
+      updateProfile(auth.currentUser, {
+        displayName: type,
+        photoURL:"https://firebasestorage.googleapis.com/v0/b/agribiz-12cc6.appspot.com/o/profile%2F272229741_475164050669220_5648552245273002941_n.png?alt=media&token=781589bc-71bd-4b66-a647-59c0bff5f9e5"
+      }).then(() => {
+        // Profile updated!
+        console.log("Account create");
+        console.log(userCredential);
+        props.onHide()
+        // ...
+      }).catch((error) => {
+        // An error occurred
+        // ...
+      });
+
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // ..
+    });
+
+}
+
+useEffect(()=>{
+  console.log(auth.currentUser)
+},[])
+
+// Display all barangays based on the selected municipality
+const availableBarangay = data.municipality.find(
+  (c) => c.name === selectedMunicipality
+);
+
+return (
+  <>
+    <Modal
+      {...props}
+      size="lg"
+      dialogClassName="modal-90w"
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
+    >
+      <Modal.Body style={{ borderRadius: "400px" }}>
+        <Container>
+          <br />
+          <h4 className="mb-4" style={{ color: "#5E3819" }}>
+            Add a User
+          </h4>
+          <Row>
+            <Col md={4}>
+              <Form>
+                <Form.Group>
+                  <Form.Select
+                    id="selectedUserType"
+                    value={selectUserType}
+                    onChange={(e) => setSelectUserType(e.target.value)}
+                    style={{
+                      borderColor: "#365900",
+                      borderRadius: "8px",
+                      boxShadow: "0 0 0 0.1rem #365900",
+                    }}
+                  >
+                    <option>--Select User Type--</option>
+                    <option value="Farmer">Farmer</option>
+                    <option value="Agrovet">Agrovet</option>
+                  </Form.Select>
                 </Form.Group>
-              </Col>
-            </Row>
-            <br />
-            <Container style={{ textAlign: "right" }}>
-              <Button
-                className="border-0 custom-close-button"
-                onClick={props.onHide}
-              >
-                Close
-              </Button>
-              &nbsp;&nbsp;&nbsp;&nbsp;
-              <Button
-                className="border-0 custom-submit-button"
-              >
-                Add User
-              </Button>
-            </Container>
-            <br />
+              </Form>
+              <br />
+            </Col>
+          </Row>
+          <Row>
+            <Col md={4}>
+              <Form.Control
+                id="fUsername"
+                type="text"
+                className="custom-form-control"
+                placeholder="Username"
+                onChange={(e) => setUserName(e.target.value)}
+              />
+              <br />
+            </Col>
+            <Col md={4}>
+              <Form.Control
+                id=""
+                type="text"
+                className="custom-form-control"
+                placeholder="First Name"
+                onChange={(e) => setUserFirstName(e.target.value)}
+              />
+              <br />
+            </Col>
+            <Col md={4}>
+              <Form.Control
+                id=""
+                type="text"
+                className="custom-form-control"
+                placeholder="Last Name"
+                onChange={(e) => setUserLastName(e.target.value)}
+              />
+              <br />
+            </Col>
+          </Row>
+          <Row>
+            <Col md={4}>
+              <Form.Control
+                id=""
+                type="email"
+                className="custom-form-control"
+                placeholder="Email Address"
+                onChange={(e) => setUserEmail(e.target.value)}
+              />
+              <br />
+            </Col>
+            <Col md={4}>
+              <Form.Control
+                id=""
+                type="number"
+                className="custom-form-control"
+                placeholder="Phone Number"
+                onChange={(e) => setUserPhoneNumber(e.target.value)}
+                onInput={(e) => {
+                  e.target.value = Math.max(0, parseInt(e.target.value))
+                    .toString()
+                    .slice(0, 11);
+                }}
+              />
+              <br />
+            </Col>
+            <Col md={4}>
+              <Form.Control
+                id=""
+                type="password"
+                className="custom-form-control"
+                placeholder="Password"
+                onChange={(e) => setUserPassword(e.target.value)}
+              />
+              <br />
+            </Col>
+          </Row>
+          <Row>
+            <Col md={4}>
+              <Form.Control
+                id=""
+                type="text"
+                className="custom-form-control"
+                placeholder="Shop Name"
+                onChange={(e) => setUserShopName(e.target.value)}
+              />
+              <br />
+            </Col>
+            <Col md={4}>
+              <Form.Control
+                id=""
+                type="text"
+                className="custom-form-control"
+                placeholder="Region"
+                value="Central Visayas (Region VII)"
+                disabled
+              />
+              <br />
+            </Col>
+            <Col md={4}>
+              <Form.Control
+                id=""
+                type="text"
+                className="custom-form-control"
+                placeholder="Province"
+                value="Cebu"
+                disabled
+              />
+              <br />
+            </Col>
+          </Row>
+          <Row>
+            <Col md={4}>
+              <Form>
+                <Form.Group>
+                  <Form.Select
+                    id="selectedMunicipalityOption"
+                    value={selectedMunicipality}
+                    onChange={(e) => setSelectedMunicipality(e.target.value)}
+                    style={{
+                      borderColor: "#365900",
+                      borderRadius: "8px",
+                      boxShadow: "0 0 0 0.1rem #365900",
+                    }}
+                  >
+                    <option>--Choose Municipality--</option>
+                    {data.municipality.map((value, key) => {
+                      return (
+                        <option value={value.name} key={key}>
+                          {value.name}
+                        </option>
+                      );
+                    })}
+                  </Form.Select>
+                </Form.Group>
+              </Form>
+              <br />
+            </Col>
+            <Col md={4}>
+              <Form>
+                <Form.Group>
+                  <Form.Select
+                    id="selectedBarangayOption"
+                    value={selectedBaranagay}
+                    onChange={(e) => setSelectedBarangay(e.target.value)}
+                    style={{
+                      borderColor: "#365900",
+                      borderRadius: "8px",
+                      boxShadow: "0 0 0 0.1rem #365900",
+                    }}
+                  >
+                    <option>--Choose Barangay--</option>
+                    {availableBarangay?.barangay.map((e, key) => {
+                      return (
+                        <option value={e.name} key={key}>
+                          {e}
+                        </option>
+                      );
+                    })}
+                  </Form.Select>
+                </Form.Group>
+              </Form>
+              <br />
+            </Col>
+            <Col md={4}>
+              <Form.Control
+                id=""
+                type="number"
+                className="custom-form-control"
+                placeholder="ZIP Code"
+                onChange={(e) => setUserZIPCode(e.target.value)}
+                onInput={(e) => {
+                  e.target.value = Math.max(0, parseInt(e.target.value))
+                    .toString()
+                    .slice(0, 4);
+                }}
+              />
+              <br />
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Form.Control
+                id=""
+                type="text"
+                className="custom-form-control"
+                placeholder="Street name, bldg., etc."
+                onChange={(e) => setUserSpecificAdd(e.target.value)}
+              />
+            </Col>
+            <Col>
+              <Form.Group controlId="formFile" className="mb-3">
+                <Form.Control type="file"
+                  onChange={e => setUserFileAttch(e.target.files[0])}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <br />
+          <Container style={{ textAlign: "right" }}>
+            <Button
+              className="border-0 custom-close-button"
+              onClick={props.onHide}
+            >
+              Close
+            </Button>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <Button
+              className="border-0 custom-submit-button"
+              onClick={addUser}
+            >
+              Add User
+            </Button>
           </Container>
-        </Modal.Body>
-      </Modal>
-    </>
-  );
+          <br />
+        </Container>
+      </Modal.Body>
+    </Modal>
+  </>
+);
 }
