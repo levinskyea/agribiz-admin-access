@@ -33,9 +33,9 @@ export default function Header() {
                         <Nav.Link className="custom-nav-link" as={Link} to='/aboutus'>
                             About Us&nbsp;&nbsp;
                         </Nav.Link>
-                        <Nav.Link className="custom-nav-link" as={Link} to='/login'>
+                        {/* <Nav.Link className="custom-nav-link" as={Link} to='/login'>
                             Login&nbsp;&nbsp;
-                        </Nav.Link> 
+                        </Nav.Link>  */}
                         <Nav.Link as={Link} to='/donatenow'>
                             <Button className="custom-donate-button">
                                 Donate Now
