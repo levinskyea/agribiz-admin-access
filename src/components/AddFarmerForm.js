@@ -1,7 +1,5 @@
-import { auth } from "../Firebase";
 import React, { useEffect, useState } from "react";
 import { Container, Modal, Button, Row, Col, Form } from "react-bootstrap";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 export default function AddFarmerForm(props) {
   const data = {
     agribizUsers: [
@@ -1504,36 +1502,8 @@ export default function AddFarmerForm(props) {
        type = userShopName + "-f"
     else
        type = userShopName + "-a"
-  createUserWithEmailAndPassword(auth, userEmail, userPassword)
-    .then((userCredential) => {
-
-
-      updateProfile(auth.currentUser, {
-        displayName: type,
-        photoURL:"https://firebasestorage.googleapis.com/v0/b/agribiz-12cc6.appspot.com/o/profile%2F272229741_475164050669220_5648552245273002941_n.png?alt=media&token=781589bc-71bd-4b66-a647-59c0bff5f9e5"
-      }).then(() => {
-        // Profile updated!
-        console.log("Account create");
-        console.log(userCredential);
-        props.onHide()
-        // ...
-      }).catch((error) => {
-        // An error occurred
-        // ...
-      });
-
-    })
-    .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      // ..
-    });
-
+  
 }
-
-useEffect(()=>{
-  console.log(auth.currentUser)
-},[])
 
 // Display all barangays based on the selected municipality
 const availableBarangay = data.municipality.find(

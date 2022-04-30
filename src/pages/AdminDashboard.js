@@ -31,16 +31,11 @@ export default function AdminDashboard() {
     <>
       <LoginHeader />
       <Container style={{ textAlign: "left" }}>
-<<<<<<< HEAD
-        <div style={{ textAlign: 'right'}}>
-          <Button onClick={() => logout()} variant="warning">Logout</Button>
-=======
         <div style={{ textAlign: "right" }}>
           {/* <Button onClick={() => logout(auth)} variant="warning">Logout</Button> */}
           <Button onClick={logout} variant="warning">
             Logout
           </Button>
->>>>>>> cef43dca259efbea00e7cf1666cd0772d1bb0304
         </div>
         <Tabs
           id="controlled-tab-example"
