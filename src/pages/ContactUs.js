@@ -8,8 +8,12 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import FloatingLabel from 'react-bootstrap/FloatingLabel';
 import agribiz_logo from '../components/assets/img/send-message.png';
+import {admin_db} from '../firebaseAdmin';
 
 export default function ContactUs() {
+
+    
+
     return (
         <>
             <Header/>

@@ -10,6 +10,11 @@ export default function VerificationModal(props) {
   
   const phoneNumberHolder = "000";
 
+  const handleSuccessMessage = () => {
+    props.onHide()
+    props.showSuccessMessage()
+  }
+
   return (
     <>
       <Modal
@@ -69,6 +74,7 @@ export default function VerificationModal(props) {
             &nbsp;&nbsp;&nbsp;&nbsp;
             <Button
               className="border-0"
+              onClick={handleSuccessMessage}
               style={{
                 backgroundColor: "#FFC727",
                 color: "#365900",
