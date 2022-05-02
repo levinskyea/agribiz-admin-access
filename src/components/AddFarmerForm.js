@@ -1,5 +1,7 @@
 import React from "react";
 import { Container, Modal, Button, Row, Col, Form } from "react-bootstrap";
+import { Formik } from 'formik';
+import * as yup from 'yup';
 
 export default function AddFarmerForm(props) {
   const data = {
@@ -1473,6 +1475,52 @@ export default function AddFarmerForm(props) {
   const [selectUserType, setSelectUserType] = React.useState();
   const [selectedMunicipality, setSelectedMunicipality] = React.useState();
   const [selectedBaranagay, setSelectedBarangay] = React.useState();
+  //const [fieldValue, setFieldValue] = React.useState();
+
+  const FILE_SIZE = 1048576;
+  const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/png'];
+
+  const schema = yup.object({
+    selectUserType: yup.string().required(),
+    userUsername: yup
+        .string()
+        .min(5, 'Whoops! Username too short.')
+        .max(20, 'Too long')
+        .required('Username is required.'),
+    userFirstName: yup.string().required('First name is required.'),
+    userLastName: yup.string().required('Last name is required.'),
+    userEmail: yup.string().email('Invalid email address').required('Email is required.'),
+    userPhoneNumber: yup
+        .string()
+        .min(9, 'Invalid Philippine number')
+        .matches(
+          /((\+[0-9]{2})|0)[.\- ]?9[0-9]{2}[.\- ]?[0-9]{3}[.\- ]?[0-9]{4}/,
+          'Must be in +63XXXXXXXXXX or XXXXXXXXX format'
+        )
+        .required('Phone number is required.'),
+    userPassword: yup
+        .string()
+        .matches(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+          'Must Contain 8 Characters, One Uppercase, One Lowercase, One Number and one special case Character'
+        )
+        .required('Password is required.'),
+    userShopName: yup.string().required('Shop name is required.'),
+    userRegion: yup.string().required(),
+    userProvince: yup.string().required(),
+    selectedMunicipalityOption: yup.string().required(),
+    selectedBaranagayOption: yup.string().required(),
+    userZIPCode: yup.number().required('ZIP code is required.'),
+    userSpecificAddress: yup.string().required('Specific address is required.'),
+    userProofValidity: yup
+        .mixed()
+        .nullable()
+        .required('Proof of validity is required.')
+        .test('FILE_SIZE', 'Uploaded file is too big.', 
+          (value) => !value || (value && value.size <= FILE_SIZE)
+        .test('FILE_FORMAT', 'Uploaded file has unsupported format.', 
+          (value) => !value || (value && SUPPORTED_FORMATS.includes(value?.type())))),
+  });
 
   // Display all barangays based on the selected municipality
   const availableBarangay = data.municipality.find(
@@ -1489,136 +1537,225 @@ export default function AddFarmerForm(props) {
         centered
       >
         <Modal.Body style={{ borderRadius: "400px" }}>
-          <Container>
+          <Container id="userForm">
             <br />
             <h4 className="mb-4" style={{ color: "#5E3819" }}>
               Add a User
             </h4>
-            <Row>
-              <Col md={4}>
-                <Form>
-                  <Form.Group>
-                    <Form.Select
-                      id="selectedUserType"
-                      value={selectUserType}
-                      onChange={(e) => setSelectUserType(e.target.value)}
-                      style={{
-                        borderColor: "#365900",
-                        borderRadius: "8px",
-                        boxShadow: "0 0 0 0.1rem #365900",
-                      }}
-                    >
-                      <option>--Select User Type--</option>
-                      <option value="Farmer">Farmer</option>
-                      <option value="Agrovet">Agrovet</option>
-                    </Form.Select>
+            <Formik
+              validationSchema={schema}
+              initialValues={{
+                userUsername: '',
+                userFirstName: '',
+                userLastName: '',
+                userEmail: '',
+                userPhoneNumber: '',
+                userPassword: '',
+                userShopName: '',
+                userRegion: 'Central Visayas (Region VII)',
+                userProvince: 'Cebu',
+                selectedMunicipalityOption: '',
+                selectedBaranagayOption: '',
+                userZIPCode: '',
+                userSpecificAddress: '',
+                userProofValidity: null,
+              }}
+              onSubmit={(values) => {
+                console.log(values);
+              }}
+            >
+            {({
+              handleSubmit,
+              handleChange,
+              handleBlur,
+              values,
+              touched,
+              isValid,
+              errors,
+            }) => (
+              <Form noValidate onSubmit={handleSubmit}>
+              <Row>
+                <Col md={4}>
+                    <Form.Group>
+                      <Form.Select
+                        name="userType"
+                        value={selectUserType}
+                        onChange={(e) => setSelectUserType(e.target.value)}
+                        style={{
+                          borderColor: "#365900",
+                          borderRadius: "8px",
+                          boxShadow: "0 0 0 0.1rem #365900",
+                        }}
+                      >
+                        <option selected disabled>Select User Type</option>
+                        <option value="Farmer">Farmer</option>
+                        <option value="Agrovet">Agrovet</option>
+                      </Form.Select>
+                    </Form.Group>
+                  <br />
+                </Col>
+              </Row>
+              <Row>
+                <Col md={4}>
+                  <Form.Group controlId="username">
+                    <Form.Control
+                      name="userUsername"
+                      value={values.userUsername}
+                      onChange={handleChange}
+                      isInvalid={!!errors.userUsername}
+                      type="text"
+                      className="custom-form-control"
+                      placeholder="Username"
+                      required
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.userUsername}
+                    </Form.Control.Feedback>
                   </Form.Group>
-                </Form>
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form.Control
-                  id="fUsername"
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Username"
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="First Name"
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Last Name"
-                />
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="email"
-                  className="custom-form-control"
-                  placeholder="Email Address"
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="number"
-                  className="custom-form-control"
-                  placeholder="Phone Number"
-                  onInput={(e) => {
-                    e.target.value = Math.max(0, parseInt(e.target.value))
-                      .toString()
-                      .slice(0, 11);
-                  }}
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="password"
-                  className="custom-form-control"
-                  placeholder="Password"
-                />
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Shop Name"
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Region"
-                  value="Central Visayas (Region VII)"
-                  disabled
-                />
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Province"
-                  value="Cebu"
-                  disabled
-                />
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form>
+                  
+                  <br />
+                </Col>
+                <Col md={4}>
+                  <Form.Control
+                    name="userFirstName"
+                    value={values.userFirstName}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userFirstName}
+                    type="text"
+                    className="custom-form-control"
+                    placeholder="First Name"
+                    required
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userFirstName}
+                  </Form.Control.Feedback>
+                  <br />
+                </Col>
+                <Col md={4}>
+                  <Form.Control
+                    name="userLastName"
+                    value={values.userLastName}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userLastName}
+                    type="text"
+                    className="custom-form-control"
+                    placeholder="Last Name"
+                    required
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userLastName}
+                  </Form.Control.Feedback>
+                  <br />
+                </Col>
+              </Row>
+              <Row>
+                <Col md={4}>
+                  <Form.Control
+                    name="userEmail"
+                    value={values.userEmail}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userEmail}
+                    type="email"
+                    className="custom-form-control"
+                    placeholder="Email Address"
+                    required
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userEmail}
+                  </Form.Control.Feedback>
+                  <br />
+                </Col>
+                <Col md={4}>
+                  <Form.Control
+                    name="userPhoneNumber"
+                    value={values.userPhoneNumber}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userPhoneNumber}
+                    type="text"
+                    className="custom-form-control"
+                    placeholder="Phone Number"
+                    required
+                    maxLength={13}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userPhoneNumber}
+                  </Form.Control.Feedback>
+                  <br />
+                </Col>
+                <Col md={4}>
+                  <Form.Control
+                    name="userPassword"
+                    value={values.userPassword}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userPassword}
+                    type="password"
+                    className="custom-form-control"
+                    placeholder="Password"
+                    required
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userPassword}
+                  </Form.Control.Feedback>
+                  <br />
+                </Col>
+              </Row>
+              <Row>
+                <Col md={4}>
+                  <Form.Control
+                    name="userShopName"
+                    value={values.userShopName}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userShopName}
+                    type="text"
+                    className="custom-form-control"
+                    placeholder="Shop Name"
+                    required
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userShopName}
+                  </Form.Control.Feedback>
+                  <br />
+                </Col>
+                <Col md={4}>
+                  <Form.Control
+                    name="userRegion"
+                    value={values.userRegion}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userRegion}
+                    type="text"
+                    className="custom-form-control"
+                    placeholder="Region"
+                    disabled
+                    required
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userRegion}
+                  </Form.Control.Feedback>
+                  <br />
+                </Col>
+                <Col md={4}>
+                  <Form.Control
+                    name="userProvince"
+                    value={values.userProvince}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userProvince}
+                    type="text"
+                    className="custom-form-control"
+                    placeholder="Province"
+                    disabled
+                    required
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userProvince}
+                  </Form.Control.Feedback>
+                  <br />
+                </Col>
+              </Row>
+              <Row>
+                <Col md={4}>
                   <Form.Group>
                     <Form.Select
-                      id="selectedMunicipalityOption"
+                      name="selectedMunicipalityOption"
                       value={selectedMunicipality}
                       onChange={(e) => setSelectedMunicipality(e.target.value)}
                       style={{
@@ -1627,7 +1764,7 @@ export default function AddFarmerForm(props) {
                         boxShadow: "0 0 0 0.1rem #365900",
                       }}
                     >
-                      <option>--Choose Municipality--</option>
+                      <option selected disabled>Choose Municipality</option>
                       {data.municipality.map((value, key) => {
                         return (
                           <option value={value.name} key={key}>
@@ -1637,80 +1774,105 @@ export default function AddFarmerForm(props) {
                       })}
                     </Form.Select>
                   </Form.Group>
-                </Form>
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form>
-                  <Form.Group>
-                    <Form.Select
-                      id="selectedBarangayOption"
-                      value={selectedBaranagay}
-                      onChange={(e) => setSelectedBarangay(e.target.value)}
-                      style={{
-                        borderColor: "#365900",
-                        borderRadius: "8px",
-                        boxShadow: "0 0 0 0.1rem #365900",
-                      }}
-                    >
-                      <option>--Choose Barangay--</option>
-                      {availableBarangay?.barangay.map((e, key) => {
-                        return (
-                          <option value={e.name} key={key}>
-                            {e}
-                          </option>
-                        );
-                      })}
-                    </Form.Select>
+                  <br />
+                </Col>
+                <Col md={4}>
+                    <Form.Group>
+                      <Form.Select
+                        name="selectedBarangayOption"
+                        value={selectedBaranagay}
+                        onChange={(e) => setSelectedBarangay(e.target.value)}
+                        style={{
+                          borderColor: "#365900",
+                          borderRadius: "8px",
+                          boxShadow: "0 0 0 0.1rem #365900",
+                        }}
+                      >
+                        <option selected disabled>Choose Barangay</option>
+                        {availableBarangay?.barangay.map((e, key) => {
+                          return (
+                            <option value={e.name} key={key}>
+                              {e}
+                            </option>
+                          );
+                        })}
+                      </Form.Select>
+                    </Form.Group>
+                  <br />
+                </Col>
+                <Col md={4}>
+                  <Form.Control
+                    name="userZIPCode"
+                    value={values.userZIPCode}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userZIPCode}
+                    type="number"
+                    className="custom-form-control"
+                    placeholder="ZIP Code"
+                    required
+                    onInput={(e) => {
+                      e.target.value = Math.max(0, parseInt(e.target.value))
+                        .toString()
+                        .slice(0, 4);
+                    }}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userZIPCode}
+                  </Form.Control.Feedback>
+                  <br />
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <Form.Control
+                    name="userSpecificAddress"
+                    value={values.userSpecificAddress}
+                    onChange={handleChange}
+                    isInvalid={!!errors.userSpecificAddress}
+                    type="text"
+                    className="custom-form-control"
+                    placeholder="Street name, bldg., etc."
+                    required
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.userSpecificAddress}
+                  </Form.Control.Feedback>
+                </Col>
+                <Col>
+                  <Form.Group controlId="formFile" className="mb-3">
+                    <Form.Control
+                      name="userProofValidity"
+                      value={values.userProofValidity}
+                      onChange={handleChange}
+                      isInvalid={!!errors.userProofValidity}
+                      type="file" 
+                      required
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.userProofValidity}
+                    </Form.Control.Feedback>
                   </Form.Group>
-                </Form>
-                <br />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  id=""
-                  type="number"
-                  className="custom-form-control"
-                  placeholder="ZIP Code"
-                  onInput={(e) => {
-                    e.target.value = Math.max(0, parseInt(e.target.value))
-                      .toString()
-                      .slice(0, 4);
-                  }}
-                />
-                <br />
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <Form.Control
-                  id=""
-                  type="text"
-                  className="custom-form-control"
-                  placeholder="Street name, bldg., etc."
-                />
-              </Col>
-              <Col>
-                <Form.Group controlId="formFile" className="mb-3">
-                  <Form.Control type="file" />
-                </Form.Group>
-              </Col>
-            </Row>
-            <br />
-            <Container style={{ textAlign: "right" }}>
-              <Button
-                className="border-0 custom-close-button"
-                onClick={props.onHide}
-              >
-                Close
-              </Button>
-              &nbsp;&nbsp;&nbsp;&nbsp;
-              <Button
-                className="border-0 custom-submit-button"
-              >
-                Add User
-              </Button>
-            </Container>
+                </Col>
+              </Row>
+              <br/>
+              <Container style={{ textAlign: "right" }}>
+                <Button
+                  className="border-0 custom-close-button"
+                  onClick={props.onHide}
+                >
+                  Close
+                </Button>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <Button
+                  type="submit"
+                  className="border-0 custom-submit-button"
+                >
+                  Add User
+                </Button>
+              </Container>
+              </Form>
+            )}
+            </Formik>
             <br />
           </Container>
         </Modal.Body>
