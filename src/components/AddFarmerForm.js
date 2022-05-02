@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Container, Modal, Button, Row, Col, Form } from "react-bootstrap";
 import { Formik } from 'formik';
 import * as yup from 'yup';
-
+import { auth, db } from '../Firebase';
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut, EmailAuthProvider, linkWithCredential } from "firebase/auth";
+import { collection, addDoc, setDoc, doc } from "firebase/firestore";
+import VerificationModal from "./VerificationModal";
 export default function AddFarmerForm(props) {
   const data = {
     agribizUsers: [
@@ -1471,40 +1474,123 @@ export default function AddFarmerForm(props) {
       },
     ],
   };
+  const [selectUserType, setSelectUserType] = useState("");
+  const [selectedMunicipality, setSelectedMunicipality] = useState("");
+  const [selectedBaranagay, setSelectedBarangay] = useState("");
+  const [userName, setUserName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNo, setPhoneNo] = useState("");
+  const [password, setPassword] = useState("");
+  const [shopName, setShopName] = useState("");
+  const [region, setRegion] = useState("Central Visayas");
+  const [city, setCity] = useState("Cebu");
+  const [zipCode, setZipCode] = useState("");
+  const [specificAdd, setSpecificAdd] = useState("");
+  const [file, setFile] = useState("");
 
-  const [selectUserType, setSelectUserType] = React.useState();
-  const [selectedMunicipality, setSelectedMunicipality] = React.useState();
-  const [selectedBaranagay, setSelectedBarangay] = React.useState();
+  const [validated, setValidated] = useState(false);
+  const [showSuccessMessage, setSuccessMessage] = useState(false);
+  const [modalShow, setModalShow] = useState(false);
   //const [fieldValue, setFieldValue] = React.useState();
+  const setUpRecaptcha = () => {
+    const auth = getAuth();
+    window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+      'size': 'invisible',
+      'callback': (response) => {
+        // reCAPTCHA solved, allow signInWithPhoneNumber.
+        onSubmit();
+      }
+    }, auth);
+  }
 
+  const onSubmit = () => {
+    setUpRecaptcha();
+    console.log(phoneNo)
+    const appVerifier = window.recaptchaVerifier;
+    const auth = getAuth();
+    signInWithPhoneNumber(auth, "+63" + phoneNo, appVerifier)
+      .then((confirmationResult) => {
+        const credential = EmailAuthProvider.credential(email, password);
+        props.onHide();
+        // SMS sent. Prompt user to type the code from the message, then sign the
+        console.log(phoneNo);
+        // user in with confirmationResult.confirm(code).
+        window.confirmationResult = confirmationResult;
+        const code = window.prompt("Enter OTP");
+        confirmationResult.confirm(code).then((result) => {
+          // User signed in successfully.
+          linkWithCredential(auth.currentUser, credential)
+            .then((usercred) => {
+              const user = usercred.user;
+              console.log("Account linking success", user);
+            }).catch((error) => {
+              console.log("Account linking error", error);
+            });
+          const user = result.user;
+          console.log("Order sent")
+          submitOrder();
+          // ...
+        }).catch((error) => {
+          // User couldn't sign in (bad verification code?)
+          // ...
+        });
+        // ...
+      }).catch((error) => {
+        // Error; SMS not sent
+        console.log(error)
+        // ...
+      });
+  }
+  async function submitOrder() {
+    const docRef = await setDoc(doc(db, "users", getAuth().currentUser.uid), {
+      userEmail: email,
+      userID: getAuth().currentUser.uid,
+      userImage: "https://firebasestorage.googleapis.com/v0/b/agribiz-12cc6.appspot.com/o/profile%2F272229741_475164050669220_5648552245273002941_n.png?alt=media&token=781589bc-71bd-4b66-a647-59c0bff5f9e5",
+      userLocation: { userRegion: region, userProvince: city, userMunicipality: selectedMunicipality, userBarangay: selectedBaranagay, userZipCode: zipCode, userSpecificAddress: specificAdd },
+      userDisplayName: shopName + '-' + selectUserType.charAt(0),
+      userFirstName: firstName,
+      userLastName: lastName,
+      userPhoneNumber: '+63' + phoneNo,
+      userIsActive: "yes",
+      userType: selectUserType,
+    })
+      .then(
+        () => {
+          console.log("done");
+          
+        }
+      )
+  }
   const FILE_SIZE = 1048576;
-  const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/png'];
+  const SUPPORTED_FORMATS = ['jpg', 'jpeg', 'png'];
 
   const schema = yup.object({
     selectUserType: yup.string().required(),
     userUsername: yup
-        .string()
-        .min(5, 'Whoops! Username too short.')
-        .max(20, 'Too long')
-        .required('Username is required.'),
+      .string()
+      .min(5, 'Whoops! Username too short.')
+      .max(20, 'Too long')
+      .required('Username is required.'),
     userFirstName: yup.string().required('First name is required.'),
     userLastName: yup.string().required('Last name is required.'),
     userEmail: yup.string().email('Invalid email address').required('Email is required.'),
     userPhoneNumber: yup
-        .string()
-        .min(9, 'Invalid Philippine number')
-        .matches(
-          /((\+[0-9]{2})|0)[.\- ]?9[0-9]{2}[.\- ]?[0-9]{3}[.\- ]?[0-9]{4}/,
-          'Must be in +63XXXXXXXXXX or XXXXXXXXX format'
-        )
-        .required('Phone number is required.'),
+      .string()
+      .min(9, 'Invalid Philippine number')
+      .matches(
+        /[.\- ]?9[0-9]{2}[.\- ]?[0-9]{3}[.\- ]?[0-9]{4}/,
+        'Must be in 9XXXXXXXXX format'
+      )
+      .required('Phone number is required.'),
     userPassword: yup
-        .string()
-        .matches(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-          'Must Contain 8 Characters, One Uppercase, One Lowercase, One Number and one special case Character'
-        )
-        .required('Password is required.'),
+      .string()
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        'Must Contain 8 Characters, One Uppercase, One Lowercase, One Number and one special case Character'
+      )
+      .required('Password is required.'),
     userShopName: yup.string().required('Shop name is required.'),
     userRegion: yup.string().required(),
     userProvince: yup.string().required(),
@@ -1513,14 +1599,28 @@ export default function AddFarmerForm(props) {
     userZIPCode: yup.number().required('ZIP code is required.'),
     userSpecificAddress: yup.string().required('Specific address is required.'),
     userProofValidity: yup
-        .mixed()
-        .nullable()
-        .required('Proof of validity is required.')
-        .test('FILE_SIZE', 'Uploaded file is too big.', 
-          (value) => !value || (value && value.size <= FILE_SIZE)
-        .test('FILE_FORMAT', 'Uploaded file has unsupported format.', 
-          (value) => !value || (value && SUPPORTED_FORMATS.includes(value?.type())))),
+      .mixed()
+      .nullable()
+      .required('Proof of validity is required.')
+      .test('FILE_FORMAT', 'Uploaded file has unsupported format.',
+        (value) => !value || (value && SUPPORTED_FORMATS.includes(value.split('.').pop()))),
   });
+
+  const handleSubmit = (e) => {
+    const form = e.currentTarget;
+    e.preventDefault();
+    if (form.checkValidity() === false) {
+
+      e.stopPropagation();
+    }
+    else {
+      // Code for OTP
+      onSubmit();
+      setModalShow(true);
+    }
+    setValidated(true);
+    console.log("I'm hereeee");
+  }
 
   // Display all barangays based on the selected municipality
   const availableBarangay = data.municipality.find(
@@ -1564,320 +1664,325 @@ export default function AddFarmerForm(props) {
                 console.log(values);
               }}
             >
-            {({
-              handleSubmit,
-              handleChange,
-              handleBlur,
-              values,
-              touched,
-              isValid,
-              errors,
-            }) => (
-              <Form noValidate onSubmit={handleSubmit}>
-              <Row>
-                <Col md={4}>
-                    <Form.Group>
-                      <Form.Select
-                      id="selectedUserType"
-                      value={selectUserType}
-                      onChange={(e) => setSelectUserType(e.target.value)}
-                      style={{
-                        borderColor: "#365900",
-                        borderRadius: "8px",
-                        boxShadow: "0 0 0 0.1rem #365900",
-                      }}
-                    >
-                        <option selected disabled>Select User Type</option>
-                        <option value="Farmer">Farmer</option>
-                        <option value="Agrovet">Agrovet</option>
-                      </Form.Select>
-                    </Form.Group>
-                  <br />
-                </Col>
-              </Row>
-              <Row>
-                <Col md={4}>
-                  <Form.Group controlId="username">
-                    <Form.Control
-                      name="userUsername"
-                      value={values.userUsername}
-                      onChange={handleChange}
-                      isInvalid={!!errors.userUsername}
-                      type="text"
-                      className="custom-form-control"
-                      placeholder="Username"
-                      required
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.userUsername}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                  
-                  <br />
-                </Col>
-                <Col md={4}>
-                  <Form.Control
-                    name="userFirstName"
-                    value={values.userFirstName}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userFirstName}
-                    type="text"
-                    className="custom-form-control"
-                    placeholder="First Name"
-                    required
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userFirstName}
-                  </Form.Control.Feedback>
-                  <br />
-                </Col>
-                <Col md={4}>
-                  <Form.Control
-                    name="userLastName"
-                    value={values.userLastName}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userLastName}
-                    type="text"
-                    className="custom-form-control"
-                    placeholder="Last Name"
-                    required
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userLastName}
-                  </Form.Control.Feedback>
-                  <br />
-                </Col>
-              </Row>
-              <Row>
-                <Col md={4}>
-                  <Form.Control
-                    name="userEmail"
-                    value={values.userEmail}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userEmail}
-                    type="email"
-                    className="custom-form-control"
-                    placeholder="Email Address"
-                    required
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userEmail}
-                  </Form.Control.Feedback>
-                  <br />
-                </Col>
-                <Col md={4}>
-                  <Form.Control
-                    name="userPhoneNumber"
-                    value={values.userPhoneNumber}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userPhoneNumber}
-                    type="text"
-                    className="custom-form-control"
-                    placeholder="Phone Number"
-                    required
-                    maxLength={13}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userPhoneNumber}
-                  </Form.Control.Feedback>
-                  <br />
-                </Col>
-                <Col md={4}>
-                  <Form.Control
-                    name="userPassword"
-                    value={values.userPassword}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userPassword}
-                    type="password"
-                    className="custom-form-control"
-                    placeholder="Password"
-                    required
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userPassword}
-                  </Form.Control.Feedback>
-                  <br />
-                </Col>
-              </Row>
-              <Row>
-                <Col md={4}>
-                  <Form.Control
-                    name="userShopName"
-                    value={values.userShopName}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userShopName}
-                    type="text"
-                    className="custom-form-control"
-                    placeholder="Shop Name"
-                    required
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userShopName}
-                  </Form.Control.Feedback>
-                  <br />
-                </Col>
-                <Col md={4}>
-                  <Form.Control
-                    name="userRegion"
-                    value={values.userRegion}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userRegion}
-                    type="text"
-                    className="custom-form-control"
-                    placeholder="Region"
-                    disabled
-                    required
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userRegion}
-                  </Form.Control.Feedback>
-                  <br />
-                </Col>
-                <Col md={4}>
-                  <Form.Control
-                    name="userProvince"
-                    value={values.userProvince}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userProvince}
-                    type="text"
-                    className="custom-form-control"
-                    placeholder="Province"
-                    disabled
-                    required
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userProvince}
-                  </Form.Control.Feedback>
-                  <br />
-                </Col>
-              </Row>
-              <Row>
-                <Col md={4}>
-                  <Form.Group>
-                    <Form.Select
-                      name="selectedMunicipalityOption"
-                      value={selectedMunicipality}
-                      onChange={(e) => setSelectedMunicipality(e.target.value)}
-                      style={{
-                        borderColor: "#365900",
-                        borderRadius: "8px",
-                        boxShadow: "0 0 0 0.1rem #365900",
-                      }}
-                    >
-                      <option selected disabled>Choose Municipality</option>
-                      {data.municipality.map((value, key) => {
-                        return (
-                          <option value={value.name} key={key}>
-                            {value.name}
-                          </option>
-                        );
-                      })}
-                    </Form.Select>
-                  </Form.Group>
-                  <br />
-                </Col>
-                <Col md={4}>
-                    <Form.Group>
-                      <Form.Select
-                        name="selectedBarangayOption"
-                        value={selectedBaranagay}
-                        onChange={(e) => setSelectedBarangay(e.target.value)}
-                        style={{
-                          borderColor: "#365900",
-                          borderRadius: "8px",
-                          boxShadow: "0 0 0 0.1rem #365900",
+              {({
+                handleChange,
+                handleBlur,
+                values,
+                touched,
+                isValid,
+                errors,
+              }) => (
+                <Form noValidate validated={validated} onSubmit={handleSubmit}>
+                  <Row>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Select
+                          name="selectedUserType"
+                          value={selectUserType}
+                          onChange={(e) =>{ setSelectUserType(e.target.value); console.log(e.target.value.charAt(0).toLocaleLowerCase())}}
+                          style={{
+                            borderColor: "#365900",
+                            borderRadius: "8px",
+                            boxShadow: "0 0 0 0.1rem #365900",
+                          }}
+                        >
+                          <option selected disabled>Select User Type</option>
+                          <option value="Farmer">Farmer</option>
+                          <option value="Agrovet">Agrovet</option>
+                        </Form.Select>
+                      </Form.Group>
+                      <br />
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={4}>
+                      <Form.Group controlId="username">
+                        <Form.Control
+                          name="userUsername"
+                          value={userName}
+                          onChange={e => setUserName(e.target.value)}
+                          isInvalid={!!errors.userUsername}
+                          type="text"
+                          className="custom-form-control"
+                          placeholder="Username"
+                          required
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.userUsername}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+
+                      <br />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Control
+                        name="userFirstName"
+                        value={firstName}
+                        onChange={e => setFirstName(e.target.value)}
+                        isInvalid={!!errors.userFirstName}
+                        type="text"
+                        className="custom-form-control"
+                        placeholder="First Name"
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userFirstName}
+                      </Form.Control.Feedback>
+                      <br />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Control
+                        name="userLastName"
+                        value={lastName}
+                        onChange={e => setLastName(e.target.value)}
+                        isInvalid={!!errors.userLastName}
+                        type="text"
+                        className="custom-form-control"
+                        placeholder="Last Name"
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userLastName}
+                      </Form.Control.Feedback>
+                      <br />
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={4}>
+                      <Form.Control
+                        name="userEmail"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        isInvalid={!!errors.userEmail}
+                        type="email"
+                        className="custom-form-control"
+                        placeholder="Email Address"
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userEmail}
+                      </Form.Control.Feedback>
+                      <br />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Control
+                        name="userPhoneNumber"
+                        value={phoneNo}
+                        onChange={e => setPhoneNo(e.target.value)}
+                        isInvalid={!!errors.userPhoneNumber}
+                        type="text"
+                        className="custom-form-control"
+                        placeholder="Phone Number"
+                        required
+                        maxLength={13}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userPhoneNumber}
+                      </Form.Control.Feedback>
+                      <br />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Control
+                        name="userPassword"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        isInvalid={!!errors.userPassword}
+                        type="password"
+                        className="custom-form-control"
+                        placeholder="Password"
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userPassword}
+                      </Form.Control.Feedback>
+                      <br />
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={4}>
+                      <Form.Control
+                        name="userShopName"
+                        value={shopName}
+                        onChange={e => setShopName(e.target.value)}
+                        isInvalid={!!errors.userShopName}
+                        type="text"
+                        className="custom-form-control"
+                        placeholder="Shop Name"
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userShopName}
+                      </Form.Control.Feedback>
+                      <br />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Control
+                        name="userRegion"
+                        value={region}
+                        isInvalid={!!errors.userRegion}
+                        type="text"
+                        className="custom-form-control"
+                        placeholder="Region"
+                        disabled
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userRegion}
+                      </Form.Control.Feedback>
+                      <br />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Control
+                        name="userProvince"
+                        value={city}
+                        isInvalid={!!errors.userProvince}
+                        type="text"
+                        className="custom-form-control"
+                        placeholder="Province"
+                        disabled
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userProvince}
+                      </Form.Control.Feedback>
+                      <br />
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Select
+                          name="selectedMunicipalityOption"
+                          value={selectedMunicipality}
+                          onChange={(e) => setSelectedMunicipality(e.target.value)}
+                          style={{
+                            borderColor: "#365900",
+                            borderRadius: "8px",
+                            boxShadow: "0 0 0 0.1rem #365900",
+                          }}
+                        >
+                          <option selected disabled>Choose Municipality</option>
+                          {data.municipality.map((value, key) => {
+                            return (
+                              <option value={value.name} key={key}>
+                                {value.name}
+                              </option>
+                            );
+                          })}
+                        </Form.Select>
+                      </Form.Group>
+                      <br />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Select
+                          name="selectedBarangayOption"
+                          value={selectedBaranagay}
+                          onChange={(e) => setSelectedBarangay(e.target.value)}
+                          style={{
+                            borderColor: "#365900",
+                            borderRadius: "8px",
+                            boxShadow: "0 0 0 0.1rem #365900",
+                          }}
+                        >
+                          <option selected disabled>Choose Barangay</option>
+                          {availableBarangay?.barangay.map((e, key) => {
+                            return (
+                              <option value={e.name} key={key}>
+                                {e}
+                              </option>
+                            );
+                          })}
+                        </Form.Select>
+                      </Form.Group>
+                      <br />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Control
+                        name="userZIPCode"
+                        value={zipCode}
+                        onChange={e => setZipCode(e.target.value)}
+                        isInvalid={!!errors.userZIPCode}
+                        type="number"
+                        className="custom-form-control"
+                        placeholder="ZIP Code"
+                        required
+                        onInput={(e) => {
+                          e.target.value = Math.max(0, parseInt(e.target.value))
+                            .toString()
+                            .slice(0, 4);
                         }}
-                      >
-                        <option selected disabled>Choose Barangay</option>
-                        {availableBarangay?.barangay.map((e, key) => {
-                          return (
-                            <option value={e.name} key={key}>
-                              {e}
-                            </option>
-                          );
-                        })}
-                      </Form.Select>
-                    </Form.Group>
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userZIPCode}
+                      </Form.Control.Feedback>
+                      <br />
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col>
+                      <Form.Control
+                        name="userSpecificAddress"
+                        value={specificAdd}
+                        onChange={e => setSpecificAdd(e.target.value)}
+                        isInvalid={!!errors.userSpecificAddress}
+                        type="text"
+                        className="custom-form-control"
+                        placeholder="Street name, bldg., etc."
+                        required
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.userSpecificAddress}
+                      </Form.Control.Feedback>
+                    </Col>
+                    <Col>
+                      <Form.Group controlId="formFile" className="mb-3">
+                        <Form.Control
+                          name="userProofValidity"
+                          onChange={e => setFile(e.target.file)}
+                          isInvalid={!!errors.userProofValidity}
+                          type="file"
+                          accept="image/*"
+                          required
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.userProofValidity}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
                   <br />
-                </Col>
-                <Col md={4}>
-                  <Form.Control
-                    name="userZIPCode"
-                    value={values.userZIPCode}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userZIPCode}
-                    type="number"
-                    className="custom-form-control"
-                    placeholder="ZIP Code"
-                    required
-                    onInput={(e) => {
-                      e.target.value = Math.max(0, parseInt(e.target.value))
-                        .toString()
-                        .slice(0, 4);
-                    }}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userZIPCode}
-                  </Form.Control.Feedback>
-                  <br />
-                </Col>
-              </Row>
-              <Row>
-                <Col>
-                  <Form.Control
-                    name="userSpecificAddress"
-                    value={values.userSpecificAddress}
-                    onChange={handleChange}
-                    isInvalid={!!errors.userSpecificAddress}
-                    type="text"
-                    className="custom-form-control"
-                    placeholder="Street name, bldg., etc."
-                    required
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.userSpecificAddress}
-                  </Form.Control.Feedback>
-                </Col>
-                <Col>
-                  <Form.Group controlId="formFile" className="mb-3">
-                    <Form.Control
-                      name="userProofValidity"
-                      value={values.userProofValidity}
-                      onChange={handleChange}
-                      isInvalid={!!errors.userProofValidity}
-                      type="file" 
-                      required
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.userProofValidity}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
-              <br/>
-              <Container style={{ textAlign: "right" }}>
-                <Button
-                  className="border-0 custom-close-button"
-                  onClick={props.onHide}
-                >
-                  Close
-                </Button>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <Button
-                  type="submit"
-                  className="border-0 custom-submit-button"
-                >
-                  Add User
-                </Button>
-              </Container>
-              </Form>
-            )}
+                  <Container style={{ textAlign: "right" }}>
+                    <Button
+                      className="border-0 custom-close-button"
+                      onClick={props.onHide}
+                    >
+                      Close
+                    </Button>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <Button
+                      type="submit"
+                      className="border-0 custom-submit-button"
+                    >
+                      Add User
+                    </Button>
+                  </Container>
+                </Form>
+              )}
             </Formik>
             <br />
+            <div id="recaptcha-container"></div>
+            <VerificationModal
+              show={modalShow}
+              showSuccessMessage={() => setSuccessMessage(true)}
+              onHide={() => setModalShow(false)}
+              dialogClassName="modal-90w"
+            />
           </Container>
           <br />
-      </Modal.Body>
-    </Modal>
-  </>
-);
+        </Modal.Body>
+      </Modal>
+
+    </>
+  );
 }

@@ -20,11 +20,11 @@ export default function DonationEntry() {
   //   ngoMessage: "",
   // }
 
-  const [modalShow, setModalShow] = useState(false);
+  
   const [option, setOption] = useState(false);
   const [validated, setValidated] = useState(false);
   const [showSuccessMessage, setSuccessMessage] = useState(false);
-
+  const [modalShow, setModalShow] = useState(false);
   const handleSubmit = (e) => {
     const form = e.currentTarget;
     e.preventDefault();

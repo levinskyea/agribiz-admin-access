@@ -44,7 +44,7 @@ export default function Login() {
     if (username === "admin" && password === "P@ssw0rd") {
       alert("Login successful");
       // Redirecting to other page.
-      history("/dashboard");
+      history("/dashboard",{state:{auth:true}});
       return false;
     } else {
       attempt--; // Decrementing by one.
