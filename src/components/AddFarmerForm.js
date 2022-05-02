@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Container, Modal, Button, Row, Col, Form } from "react-bootstrap";
 import { Formik } from 'formik';
 import * as yup from 'yup';
@@ -1527,6 +1527,27 @@ export default function AddFarmerForm(props) {
     (c) => c.name === selectedMunicipality
   );
 
+  const addUser = () => {
+    console.log(selectUserType);
+    console.log(userName);
+    console.log(userFirstName);
+    console.log(userLastName);
+    console.log(userEmail);
+    console.log(userPhoneNumber);
+    console.log(userPassword);
+    console.log(userShopName);
+    console.log(selectedMunicipality);
+    console.log(selectedBaranagay);
+    console.log(userZIPCode);
+    console.log(userSpecificAdd);
+    console.log(userFileAttach);
+    let type = ""
+    if (selectUserType === "Farmer")
+       type = userShopName + "-f"
+    else
+       type = userShopName + "-a"
+  }
+
   return (
     <>
       <Modal
@@ -1875,8 +1896,9 @@ export default function AddFarmerForm(props) {
             </Formik>
             <br />
           </Container>
-        </Modal.Body>
-      </Modal>
-    </>
-  );
+          <br />
+      </Modal.Body>
+    </Modal>
+  </>
+);
 }
