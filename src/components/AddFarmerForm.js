@@ -1537,7 +1537,7 @@ export default function AddFarmerForm(props) {
         centered
       >
         <Modal.Body style={{ borderRadius: "400px" }}>
-          <Container id="userForm">
+          <Container>
             <br />
             <h4 className="mb-4" style={{ color: "#5E3819" }}>
               Add a User
@@ -1578,15 +1578,15 @@ export default function AddFarmerForm(props) {
                 <Col md={4}>
                     <Form.Group>
                       <Form.Select
-                        name="userType"
-                        value={selectUserType}
-                        onChange={(e) => setSelectUserType(e.target.value)}
-                        style={{
-                          borderColor: "#365900",
-                          borderRadius: "8px",
-                          boxShadow: "0 0 0 0.1rem #365900",
-                        }}
-                      >
+                      id="selectedUserType"
+                      value={selectUserType}
+                      onChange={(e) => setSelectUserType(e.target.value)}
+                      style={{
+                        borderColor: "#365900",
+                        borderRadius: "8px",
+                        boxShadow: "0 0 0 0.1rem #365900",
+                      }}
+                    >
                         <option selected disabled>Select User Type</option>
                         <option value="Farmer">Farmer</option>
                         <option value="Agrovet">Agrovet</option>
