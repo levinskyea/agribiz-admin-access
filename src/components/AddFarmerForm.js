@@ -1672,7 +1672,7 @@ export default function AddFarmerForm(props) {
                 isValid,
                 errors,
               }) => (
-                <Form noValidate validated={validated} onSubmit={handleSubmit}>
+                <Form noValidate onSubmit={handleSubmit}>
                   <Row>
                     <Col md={4}>
                       <Form.Group>
