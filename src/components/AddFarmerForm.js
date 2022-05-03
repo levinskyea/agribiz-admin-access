@@ -3,8 +3,8 @@ import { Container, Modal, Button, Row, Col, Form } from "react-bootstrap";
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { auth, db } from '../Firebase';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut, EmailAuthProvider, linkWithCredential } from "firebase/auth";
-import { collection, addDoc, setDoc, doc } from "firebase/firestore";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut, EmailAuthProvider, linkWithCredential,updateProfile  } from "firebase/auth";
+import { collection, addDoc, setDoc, doc, serverTimestamp  } from "firebase/firestore";
 import VerificationModal from "./VerificationModal";
 export default function AddFarmerForm(props) {
   const data = {
@@ -1525,13 +1525,18 @@ export default function AddFarmerForm(props) {
             .then((usercred) => {
               const user = usercred.user;
               console.log("Account linking success", user);
+              updateProfile(auth.currentUser, {
+                displayName: shopName + '-' + selectUserType.charAt(0), photoURL: "https://firebasestorage.googleapis.com/v0/b/agribiz-12cc6.appspot.com/o/profile%2F272229741_475164050669220_5648552245273002941_n.png?alt=media&token=781589bc-71bd-4b66-a647-59c0bff5f9e5"
+              }).then(() => {
+                submitOrder();
+              }).catch((error) => {
+                // An error occurred
+              });
             }).catch((error) => {
               console.log("Account linking error", error);
             });
           const user = result.user;
           console.log("Order sent")
-          submitOrder();
-          // ...
         }).catch((error) => {
           // User couldn't sign in (bad verification code?)
           // ...
@@ -1555,11 +1560,12 @@ export default function AddFarmerForm(props) {
       userPhoneNumber: '+63' + phoneNo,
       userIsActive: "yes",
       userType: selectUserType,
+      userCreatedDate: serverTimestamp()
     })
       .then(
         () => {
           console.log("done");
-          
+          props.successAlert();
         }
       )
   }
@@ -1616,7 +1622,7 @@ export default function AddFarmerForm(props) {
     else {
       // Code for OTP
       onSubmit();
-      setModalShow(true);
+      // setModalShow(true);
     }
     setValidated(true);
     console.log("I'm hereeee");
@@ -1672,14 +1678,14 @@ export default function AddFarmerForm(props) {
                 isValid,
                 errors,
               }) => (
-                <Form noValidate onSubmit={handleSubmit}>
+                <Form noValidate validated={validated} onSubmit={handleSubmit}>
                   <Row>
                     <Col md={4}>
                       <Form.Group>
                         <Form.Select
                           name="selectedUserType"
                           value={selectUserType}
-                          onChange={(e) =>{ setSelectUserType(e.target.value); console.log(e.target.value.charAt(0).toLocaleLowerCase())}}
+                          onChange={(e) => { setSelectUserType(e.target.value); console.log(e.target.value.charAt(0).toLocaleLowerCase()) }}
                           style={{
                             borderColor: "#365900",
                             borderRadius: "8px",
@@ -1691,27 +1697,6 @@ export default function AddFarmerForm(props) {
                           <option value="Agrovet">Agrovet</option>
                         </Form.Select>
                       </Form.Group>
-                      <br />
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col md={4}>
-                      <Form.Group controlId="username">
-                        <Form.Control
-                          name="userUsername"
-                          value={userName}
-                          onChange={e => setUserName(e.target.value)}
-                          isInvalid={!!errors.userUsername}
-                          type="text"
-                          className="custom-form-control"
-                          placeholder="Username"
-                          required
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.userUsername}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-
                       <br />
                     </Col>
                     <Col md={4}>
@@ -1861,7 +1846,7 @@ export default function AddFarmerForm(props) {
                             boxShadow: "0 0 0 0.1rem #365900",
                           }}
                         >
-                          <option selected disabled>Choose Municipality</option>
+                          <option selected>Choose Municipality</option>
                           {data.municipality.map((value, key) => {
                             return (
                               <option value={value.name} key={key}>

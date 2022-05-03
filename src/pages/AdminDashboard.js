@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Container, Row, Col, Button, Tab, Tabs, Form } from "react-bootstrap";
+import { Container, Row, Col, Button, Tab, Tabs, Form, Alert } from "react-bootstrap";
 import FarmersCard from "../components/FarmersCard";
 import CustomersCard from "../components/CustomersCard";
 import AgrovetsCard from "../components/AgrovetsCard";
@@ -12,12 +12,13 @@ import Poultry from "../components/Poultry";
 import AddFarmerForm from "../components/AddFarmerForm";
 import UsersTable from "../components/UsersTable";
 import LendingCenter from "../components/LendingCenter";
-import { useNavigate, useLocation,Navigate  } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import ErrorPage from "./ErrorPage";
 import VerificationModal from '../components/VerificationModal';
 
 export default function AdminDashboard() {
   const [addUserShow, setAddUserShow] = useState(false);
+  const [addSuccess, setAddSuccess] = useState(false);
   const history = useNavigate();
   const location = useLocation();
   const logout = () => {
@@ -32,12 +33,13 @@ export default function AdminDashboard() {
   try {
     auth = location.state.auth
   } catch (error) {
-    
+
   }
-  if ( auth ) {
+  if (auth) {
     return (
       <>
         <LoginHeader />
+        {addSuccess?<Alert dismissible > Account created successfully! </Alert> : ""}
         <Container style={{ textAlign: "left" }}>
           <div style={{ textAlign: "right" }}>
             {/* <Button onClick={() => logout(auth)} variant="warning">Logout</Button> */}
@@ -98,6 +100,7 @@ export default function AdminDashboard() {
                   <AddFarmerForm
                     show={addUserShow}
                     onHide={() => setAddUserShow(false)}
+                    successAlert={()=>setAddSuccess(true)}
                   />
                 </Col>
               </Row>
@@ -169,6 +172,6 @@ export default function AdminDashboard() {
     );
   }
   else {
-    return <ErrorPage/>
+    return <ErrorPage />
   }
 }
