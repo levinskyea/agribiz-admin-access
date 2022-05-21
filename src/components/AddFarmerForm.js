@@ -1526,7 +1526,7 @@ export default function AddFarmerForm(props) {
               const user = usercred.user;
               console.log("Account linking success", user);
               updateProfile(auth.currentUser, {
-                displayName: shopName + '-' + selectUserType.charAt(0), photoURL: "https://firebasestorage.googleapis.com/v0/b/agribiz-12cc6.appspot.com/o/profile%2F272229741_475164050669220_5648552245273002941_n.png?alt=media&token=781589bc-71bd-4b66-a647-59c0bff5f9e5"
+                displayName: shopName + '-' + selectUserType.charAt(0).toLocaleLowerCase(), photoURL: "https://firebasestorage.googleapis.com/v0/b/agribiz-12cc6.appspot.com/o/profile%2F272229741_475164050669220_5648552245273002941_n.png?alt=media&token=781589bc-71bd-4b66-a647-59c0bff5f9e5"
               }).then(() => {
                 submitOrder();
               }).catch((error) => {
@@ -1554,7 +1554,7 @@ export default function AddFarmerForm(props) {
       userID: getAuth().currentUser.uid,
       userImage: "https://firebasestorage.googleapis.com/v0/b/agribiz-12cc6.appspot.com/o/profile%2F272229741_475164050669220_5648552245273002941_n.png?alt=media&token=781589bc-71bd-4b66-a647-59c0bff5f9e5",
       userLocation: { userRegion: region, userProvince: city, userMunicipality: selectedMunicipality, userBarangay: selectedBaranagay, userZipCode: zipCode, userSpecificAddress: specificAdd },
-      userDisplayName: shopName + '-' + selectUserType.charAt(0),
+      userDisplayName: shopName + '-' + selectUserType.charAt(0).toLocaleLowerCase(),
       userFirstName: firstName,
       userLastName: lastName,
       userPhoneNumber: '+63' + phoneNo,
@@ -1685,7 +1685,7 @@ export default function AddFarmerForm(props) {
                         <Form.Select
                           name="selectedUserType"
                           value={selectUserType}
-                          onChange={(e) => { setSelectUserType(e.target.value); console.log(e.target.value.charAt(0).toLocaleLowerCase()) }}
+                          onChange={(e) => { setSelectUserType(e.target.value.charAt(0).toLocaleLowerCase()); console.log(e.target.value.charAt(0).toLocaleLowerCase()) }}
                           style={{
                             borderColor: "#365900",
                             borderRadius: "8px",
@@ -1759,7 +1759,7 @@ export default function AddFarmerForm(props) {
                         className="custom-form-control"
                         placeholder="Phone Number"
                         required
-                        maxLength={13}
+                        maxLength={10}
                       />
                       <Form.Control.Feedback type="invalid">
                         {errors.userPhoneNumber}
