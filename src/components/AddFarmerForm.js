@@ -1558,7 +1558,7 @@ export default function AddFarmerForm(props) {
       userFirstName: firstName,
       userLastName: lastName,
       userPhoneNumber: '+63' + phoneNo,
-      userIsActive: "yes",
+      userStatus:"inactive",
       userType: selectUserType.toLowerCase(),
       userCreatedDate: serverTimestamp()
     })
@@ -1957,12 +1957,12 @@ export default function AddFarmerForm(props) {
             </Formik>
             <br />
             <div id="recaptcha-container"></div>
-            <VerificationModal
+            {/* <VerificationModal
               show={modalShow}
               showSuccessMessage={() => setSuccessMessage(true)}
               onHide={() => setModalShow(false)}
               dialogClassName="modal-90w"
-            />
+            /> */}
           </Container>
           <br />
         </Modal.Body>
