@@ -4,27 +4,97 @@ import Form from "react-bootstrap/Form";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import { auth, db } from '../Firebase';
 import Button from "react-bootstrap/Button";
-import VerificationModal from "./VerificationModal";
 import CashSelection from "./CashSelection";
 import SuccessDonationMessage from "./SuccessDonationMessage";
+import { collection, addDoc, setDoc, doc, serverTimestamp  } from "firebase/firestore";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut, EmailAuthProvider, linkWithCredential,updateProfile  } from "firebase/auth";
 
 export default function DonationEntry() {
 
-  // const initialState = {
-  //   ngoFullName: "",
-  //   ngoEmail: "",
-  //   ngoPhoneNumber: "",
-  //   ngoOrganization: "",
-  //   selectedDonationOption: "",
-  //   ngoMessage: "",
-  // }
-
-  
   const [option, setOption] = useState(false);
   const [validated, setValidated] = useState(false);
   const [showSuccessMessage, setSuccessMessage] = useState(false);
   const [modalShow, setModalShow] = useState(false);
+
+  const [fullname,setFullname] = useState("");
+  const [email,setEmail] = useState("");
+  const [phoneNo,setPhoneNo] = useState("");
+  const [organization,setOrganization] = useState("");
+  const [donationType,setDonationType] = useState("Items, Equipment & Machinerie");
+  const [message,setMessage] = useState("");
+
+  const setUpRecaptcha = () => {
+    const auth = getAuth();
+    window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+      'size': 'invisible',
+      'callback': (response) => {
+        // reCAPTCHA solved, allow signInWithPhoneNumber.
+        onSubmit();
+      }
+    }, auth);
+  }
+
+  const onSubmit = () => {
+    setUpRecaptcha()
+    console.log(phoneNo)
+    const appVerifier = window.recaptchaVerifier;
+    const auth = getAuth();
+    signInWithPhoneNumber(auth, "+63" + phoneNo, appVerifier)
+      .then((confirmationResult) => {
+        // const credential = EmailAuthProvider.credential(email, password);
+        // SMS sent. Prompt user to type the code from the message, then sign the
+        console.log(phoneNo);
+        // user in with confirmationResult.confirm(code).
+        window.confirmationResult = confirmationResult;
+        const code = window.prompt("Enter OTP");
+        confirmationResult.confirm(code).then((result) => {
+          const user = result.user;
+          submitDonation();
+          console.log("Order sent")
+        }).catch((error) => {
+          // User couldn't sign in (bad verification code?)
+          // ...
+        });
+        // ...
+      }).catch((error) => {
+        // Error; SMS not sent
+        console.log(error)
+        // ...
+      });
+  }
+
+  async function submitDonation() {
+    const docRef = await addDoc(collection(db, "ngoDonation"), {
+      ngoEmail: email,
+      ngoID: getAuth().currentUser.uid,
+      userPhoneNumber: '+63' + phoneNo,
+      ngoFullName:fullname,
+      ngoOrganization: organization,
+      ngoDonationType: donationType,
+      ngoMessage:message
+    })
+      .then(
+        () => {
+          console.log("ngo Donation recorded!");
+          setValidated(false);
+          setSuccessMessage(true);
+          setFullname("")
+          setEmail("")
+          setMessage("")
+          setOrganization("")
+          setPhoneNo("")
+          setDonationType("")
+
+          setTimeout(() => {
+            console.log('Hello, World!')
+            setSuccessMessage(false);
+          }, 3000);
+        }
+      )
+  }
+
   const handleSubmit = (e) => {
     const form = e.currentTarget;
     e.preventDefault();
@@ -34,7 +104,8 @@ export default function DonationEntry() {
     }
     else {
       // Code for OTP
-      setModalShow(true);
+      // setModalShow(true);
+      onSubmit();
     }
     setValidated(true);
     console.log("I'm hereeee");
@@ -43,6 +114,7 @@ export default function DonationEntry() {
   return (
     <>
       <Container style={{ textAlign: "left" }}>
+      <div id="recaptcha-container"></div>
         <br />
         <h5 style={{ color: "#365900", fontWeight: "600" }}>
           You are about to donate our farmers...
@@ -56,6 +128,8 @@ export default function DonationEntry() {
                   type="text"
                   id="ngoFullName"
                   placeholder="Full name"
+                  value={fullname}
+                  onChange = {(e)=>setFullname(e.target.value)}
                   style={{
                     borderColor: "#365900",
                     borderRadius: "8px",
@@ -73,6 +147,8 @@ export default function DonationEntry() {
                   type="email"
                   id="ngoEmail"
                   placeholder="Email address"
+                  value={email}
+                  onChange={(e)=>setEmail(e.target.value)}
                   style={{
                     borderColor: "#365900",
                     borderRadius: "8px",
@@ -91,6 +167,8 @@ export default function DonationEntry() {
                   type="number"
                   id="ngoPhoneNumber"
                   placeholder="Phone number"
+                  value={phoneNo}
+                  onChange={e=>setPhoneNo(e.target.value)}
                   style={{
                     borderColor: "#365900",
                     borderRadius: "8px",
@@ -113,6 +191,8 @@ export default function DonationEntry() {
                   type="text"
                   id="ngoOrganization"
                   placeholder="Organization"
+                  value={organization}
+                  onChange={e=>setOrganization(e.target.value)}
                   style={{
                     borderColor: "#365900",
                     borderRadius: "8px",
@@ -142,20 +222,21 @@ export default function DonationEntry() {
                     {/* <label>I want to donate:</label> */}
                     <Form.Select
                       id="selectedDonationOption"
-                      onClick={(e) => setOption(e.target.value)}
+                      value={donationType}
+                      onClick={(e) => {setDonationType(e.target.value); console.log(e.target.value);}}
                       style={{
                         borderColor: "#365900",
                         borderRadius: "8px",
                         boxShadow: "0 0 0 0.1rem #365900",
                       }}
                     >
-                      <option value="0">Items, Equipment & Machineries</option>
-                      <option value="1">Cash</option>
+                      <option value="Items, Equipment & Machinerie">Items, Equipment & Machineries</option>
+                      <option value="Cash">Cash</option>
                     </Form.Select>
                   </Form.Group>
                 </fieldset>
                 {/* Choose file appears only when cash is selected. */}
-                {option === "1" && <CashSelection />}
+                {donationType === "Cash" && <CashSelection />}
               </Form>
             </Col>
             <Col xs={9}>
@@ -168,6 +249,8 @@ export default function DonationEntry() {
                   as="textarea"
                   id="ngoMessage"
                   placeholder="Write a short message here for the farmers..."
+                  value={message}
+                  onChange={e=>setMessage(e.target.value)}
                   style={{
                     height: "100px",
                     borderColor: "#365900",
@@ -216,12 +299,12 @@ export default function DonationEntry() {
           </Row>
         </Form>
 
-        <VerificationModal
+        {/* <VerificationModal
           show={modalShow}
           showSuccessMessage={() => setSuccessMessage(true)}
           onHide={() => setModalShow(false)}
           dialogClassName="modal-90w"
-        />
+        /> */}
         <br />
 
       </Container>
