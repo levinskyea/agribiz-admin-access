@@ -1559,7 +1559,7 @@ export default function AddFarmerForm(props) {
       userLastName: lastName,
       userPhoneNumber: '+63' + phoneNo,
       userIsActive: "yes",
-      userType: selectUserType,
+      userType: selectUserType.toLowerCase(),
       userCreatedDate: serverTimestamp()
     })
       .then(
@@ -1685,7 +1685,7 @@ export default function AddFarmerForm(props) {
                         <Form.Select
                           name="selectedUserType"
                           value={selectUserType}
-                          onChange={(e) => { setSelectUserType(e.target.value.charAt(0).toLocaleLowerCase()); console.log(e.target.value.charAt(0).toLocaleLowerCase()) }}
+                          onChange={(e) => { setSelectUserType(e.target.value); console.log(e.target.value.charAt(0).toLocaleLowerCase());console.log(e.target.value.toLowerCase()) }}
                           style={{
                             borderColor: "#365900",
                             borderRadius: "8px",
