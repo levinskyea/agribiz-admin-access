@@ -1,5 +1,5 @@
 //import { useState, useEffect } from "react";
-import LoginHeader from "../components/LoginHeader";
+import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Col, Container, Row } from "react-bootstrap";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
@@ -61,7 +61,7 @@ export default function Login() {
 
   return (
     <>
-      <LoginHeader />
+      <Header />
       <br />
       <br />
       <br />

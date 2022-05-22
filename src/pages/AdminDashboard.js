@@ -19,16 +19,8 @@ import VerificationModal from '../components/VerificationModal';
 export default function AdminDashboard() {
   const [addUserShow, setAddUserShow] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
-  const history = useNavigate();
   const location = useLocation();
-  const logout = () => {
-    let text = "Do you want to logout?";
-    // eslint-disable-next-line no-restricted-globals
-    if (confirm(text) === true) {
-      // Redirecting to other page.
-      history("/login");
-    }
-  };
+  
   var auth = false;
   try {
     auth = location.state.auth
@@ -41,12 +33,6 @@ export default function AdminDashboard() {
         <LoginHeader />
         {addSuccess?<Alert dismissible > Account created successfully! </Alert> : ""}
         <Container style={{ textAlign: "left" }}>
-          <div style={{ textAlign: "right" }}>
-            {/* <Button onClick={() => logout(auth)} variant="warning">Logout</Button> */}
-            <Button onClick={logout} variant="warning">
-              Logout
-            </Button>
-          </div>
           <Tabs
             id="controlled-tab-example"
             variant="pills"
